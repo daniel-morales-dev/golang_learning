@@ -2,6 +2,8 @@ package main
 
 import (
 	"account/account"
+	"account/handlerErrors"
+	"errors"
 	"fmt"
 )
 
@@ -10,18 +12,11 @@ func main() {
 	account2 := account.NewAccount("Nicole", 10)
 
 	// En GO no existe el contexto de excepciones
-	err1 := account1.Deposit(100)
-	if err1 != nil {
-		fmt.Println(err1)
-		//log.Fatal(err1) // Termina y muestra el error
-		return // Salir porque no tiene sentido seguir con un depósito inválido
-	}
+	err1 := account1.Deposit(150)
+	handleDepositErrors(err1)
+
 	err2 := account2.Deposit(10)
-	if err2 != nil {
-		fmt.Println(err2)
-		//log.Fatal(err2) // Termina y muestra el error
-		return // Salir porque no tiene sentido seguir con un depósito inválido
-	}
+	handleDepositErrors(err2)
 
 	// Go desferencia la posición en memoria para ser mas amigable.
 	fmt.Println("Account 1 ", account1) // Imprime &{Daniel 50}
@@ -31,18 +26,36 @@ func main() {
 	printFinalBalance(account1)
 	printFinalBalance(account2)
 
-	account1.Transfer(30, account2)
+	errTransfer := account1.Transfer(30, account2)
+
+	handleDepositErrors(errTransfer)
 
 	printFinalBalance(account1)
 	printFinalBalance(account2)
 
-	err := account1.Transfer(100, account2)
-	if err != nil {
-		fmt.Println(err)
-	}
+	errTransfer = account1.Transfer(-200, account2)
+	handleDepositErrors(errTransfer)
+
 }
 
 func printFinalBalance(account *account.Account) {
 	fmt.Printf("Dirección recibida en printFinalBalance: %p\n", account)
 	fmt.Printf("El balance de la cuenta %s es %.2f\n", account.Owner, account.Balance)
+}
+
+func handleDepositErrors(err error) {
+	if err != nil {
+		// Desenrollando el error con errors.As
+		var insufficientFundsErr *handlerErrors.InsufficientFunds
+		var negativeDepositErr *handlerErrors.NegativeAmountDeposit
+
+		if errors.As(err, &insufficientFundsErr) {
+			fmt.Printf("ERROR: Fondos insuficientes - %s\n", insufficientFundsErr.Error())
+		} else if errors.As(err, &negativeDepositErr) {
+			fmt.Printf("ERROR: Depósito negativo - %s\n", negativeDepositErr.Error())
+		} else {
+			fmt.Printf("ERROR desconocido: %s\n", err.Error())
+		}
+		return
+	}
 }

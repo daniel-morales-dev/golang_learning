@@ -1,8 +1,7 @@
 package account
 
 import (
-	handlerErrors "account/errors"
-	"errors"
+	"account/handlerErrors"
 	"fmt"
 )
 
@@ -22,7 +21,7 @@ func NewAccount(owner string, balance float64) *Account {
 
 func (account *Account) Deposit(amount float64) error {
 	if amount < 0 {
-		return &handlerErrors.NegativeAmountDeposite{Amount: amount}
+		return fmt.Errorf("error en depósito: %w", &handlerErrors.NegativeAmountDeposit{Amount: amount})
 	}
 	account.Balance += amount
 	fmt.Printf("Deposited %.2f to %s's account. New balance: %.2f\n", amount, account.Owner, account.Balance)
@@ -33,10 +32,13 @@ func (account *Account) Transfer(amount float64, recipient *Account) error {
 	fmt.Printf("Try to transfer %.2f to %s's account.\n", amount, recipient.Owner)
 
 	if amount >= account.Balance {
-		return errors.New("No tienes el monto suficiente para esta transferencia.")
+		return fmt.Errorf("error en transferencia: %w", &handlerErrors.InsufficientFunds{Amount: amount, Balance: account.Balance})
 	}
 
-	recipient.Deposit(amount)
+	err := recipient.Deposit(amount)
+	if err != nil {
+		return fmt.Errorf("falló depósito en cuenta destino: %w", err)
+	}
 	account.Balance -= amount
 
 	fmt.Printf("Transferred %.2f to %s's account. New balance: %.2f\n", amount, recipient.Owner, recipient.Balance)
