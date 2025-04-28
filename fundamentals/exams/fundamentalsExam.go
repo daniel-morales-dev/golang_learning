@@ -66,8 +66,6 @@ func addProduct(p Product) {
 }
 
 func searchProduct(name string) {
-	product := Product{}
-
 	index, ok := cacheProduct[name]
 	if ok {
 		fmt.Println(printProduct(productList[index]))

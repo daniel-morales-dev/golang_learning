@@ -14,6 +14,7 @@ func (s Student) SayHello() {
 	fmt.Printf("Hello, I am %s and I am %d years old\n", s.Name, s.Age)
 }
 
+// Esto es un campo por valor, por ende no modificara el struct original
 func (s Student) IsApproved() bool {
 	return s.Qualification >= 3.0
 }
